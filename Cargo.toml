@@ -2,3 +2,12 @@
 name = "rspsps"
 version = "0.1.0"
 authors = ["David Heise"]
+link = "spsps"
+build = "build.rs"
+
+[[bin]]
+name = "rspsps"
+path = "src/main.rs"
+
+[dependencies]
+libc = "*"
