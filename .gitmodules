@@ -1,0 +1,3 @@
+[submodule "spsps"]
+	path = spsps
+	url = git@github.com:sprowell/spsps.git
