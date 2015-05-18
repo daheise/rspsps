@@ -1,2 +1,3 @@
-# rspsps
-A rust wrapper for sprowell's spsps.
+# RSPSPS (Rusty Stacy's Pathetically Simple Parsing System)
+ 
+A rust wrapper for [Stacy Prowell](https://github.com/sprowell)'s [spsps](https://github.com/sprowell/spsps).
