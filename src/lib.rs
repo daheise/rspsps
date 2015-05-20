@@ -25,7 +25,7 @@ struct Parser{
 extern{
 	//This returns an owned Parser
 	fn spsps_new(name: *const libc::c_char, stream: *mut libc::FILE) -> *mut spsps_parser_;
-	fn spsps_free(parser: *mut Parser);
+	fn spsps_free(parser: *mut spsps_parser_);
 	//This returns an owned C string.
 	fn spsps_loc_to_string(loc: *mut Loc) -> *mut libc::c_char;
 	//This returns a borrowed string
@@ -50,6 +50,12 @@ impl Parser{
 			let fd = libc::funcs::c95::stdio::fopen(path,  CString::new("r").unwrap().as_ptr());
 			Parser{ ptr: spsps_new(CString::new(name).unwrap().as_ptr(), fd) }
 		 }
+	}
+}
+
+impl Drop for Parser{
+	fn drop(&mut self) {
+		unsafe{ spsps_free(self.ptr); }
 	}
 }
 
