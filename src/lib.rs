@@ -16,6 +16,7 @@ struct Errno;
 //This is for the opaque C pointer
 enum spsps_parser_ {}
 //this will be the safe abstraction
+#[derive(Debug)]
 struct Parser{
 	ptr: *mut spsps_parser_
 }
@@ -66,4 +67,11 @@ impl Loc{
 		unsafe {libc::free(tmp.as_ptr() as *mut libc::c_void);}
 		retval
 	}
+}
+
+#[test]
+fn test_from_file(){
+	let test_path = Path::new(file!());
+	let p = Parser::from_file("test", test_path);
+	println!("{:?}", p);
 }
