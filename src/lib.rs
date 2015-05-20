@@ -1,19 +1,30 @@
 extern crate libc;
 use std::str;
 use std::ptr;
+use std::path::Path;
+use std::fs::File;
 use std::ffi::CStr;
+use std::ffi::CString;
+
+
 
 #[repr(C)]
 struct Loc;
 #[repr(C)]
 struct Errno;
-#[repr(C)]
-struct Parser;
+
+//This is for the opaque C pointer
+enum spsps_parser_ {}
+//this will be the safe abstraction
+struct Parser{
+	ptr: *mut spsps_parser_
+}
+
 
 #[link(name = "spsps")]
 extern{
 	//This returns an owned Parser
-	fn spsps_new(name: *mut libc::c_char, stream: libc::FILE) -> *mut Parser;
+	fn spsps_new(name: *const libc::c_char, stream: *mut libc::FILE) -> *mut spsps_parser_;
 	fn spsps_free(parser: *mut Parser);
 	//This returns an owned C string.
 	fn spsps_loc_to_string(loc: *mut Loc) -> *mut libc::c_char;
@@ -29,13 +40,24 @@ extern{
 	fn spsps_peek(parser: *mut Parser) -> libc::c_char;
 	fn spsps_peek_n(parser: *mut Parser, n: libc::size_t) -> *mut libc::c_char;
 	fn spsps_peek_str(parser: *mut Parser, next: *mut libc::c_char) -> libc::c_int;
-	fn spsps_peek_and_consume(parser: *mut Parser, next: *mut libc::c_char) -> libc::c_int;
-	
+	fn spsps_peek_and_consume(parser: *mut Parser, next: *mut libc::c_char) -> libc::c_int;	
 }
 
-fn loc_to_string(loc: &mut Loc) -> String{
-	let tmp = unsafe { CStr::from_ptr(spsps_loc_to_string(loc)) };
-	let retval = str::from_utf8(tmp.to_bytes()).unwrap_or("").to_owned();
-	unsafe {libc::free(tmp.as_ptr() as *mut libc::c_void);}
-	retval
- }
+impl Parser{
+	fn from_file(name: &str, path: &Path) -> Parser {
+		unsafe{
+			let path = CString::new(path.to_str().unwrap()).unwrap().as_ptr();
+			let fd = libc::funcs::c95::stdio::fopen(path,  CString::new("r").unwrap().as_ptr());
+			Parser{ ptr: spsps_new(CString::new(name).unwrap().as_ptr(), fd) }
+		 }
+	}
+}
+
+impl Loc{
+	fn loc_to_string(loc: &mut Loc) -> String{
+		let tmp = unsafe { CStr::from_ptr(spsps_loc_to_string(loc)) };
+		let retval = str::from_utf8(tmp.to_bytes()).unwrap_or("").to_owned();
+		unsafe {libc::free(tmp.as_ptr() as *mut libc::c_void);}
+		retval
+	}
+}
