@@ -12,3 +12,6 @@
 
 # Ignore submodules
 spsps
+
+#ignore eclipse project
+.project
