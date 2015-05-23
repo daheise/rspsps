@@ -3,6 +3,16 @@ sudo: required
 
 rust:
   - stable
+
+# spsps needs gcc 4.8 or greater
+before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get install -qq gcc-4.9
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
+
 before_script:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
   - cd spsps
