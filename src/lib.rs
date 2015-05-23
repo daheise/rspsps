@@ -31,17 +31,17 @@ extern{
 	fn spsps_loc_to_string(loc: *mut Loc) -> *mut libc::c_char;
 	//This returns a borrowed string
 	fn spsps_printchar(xch: libc::c_char) -> *mut libc::c_char;
-	fn spsps_consume(parser: *mut Parser) -> libc::c_char;
-	fn spsps_consume_n(parser: *mut Parser, n: libc::size_t);
-	fn spsps_consume_whitespace(parser: *mut Parser);
+	fn spsps_consume(parser: *mut spsps_parser_) -> libc::c_char;
+	fn spsps_consume_n(parser: *mut spsps_parser_, n: libc::size_t);
+	fn spsps_consume_whitespace(parser: *mut spsps_parser_);
 	//Not sure what return type to use for bool
-	fn spsps_eof(parser: *mut Parser) -> libc::c_int;
+	fn spsps_eof(parser: *mut spsps_parser_) -> libc::c_int;
 	//This returns an owned Loc 
-	fn spsps_loc(parser: *mut Parser) -> *mut Loc;
-	fn spsps_peek(parser: *mut Parser) -> libc::c_char;
-	fn spsps_peek_n(parser: *mut Parser, n: libc::size_t) -> *mut libc::c_char;
-	fn spsps_peek_str(parser: *mut Parser, next: *mut libc::c_char) -> libc::c_int;
-	fn spsps_peek_and_consume(parser: *mut Parser, next: *mut libc::c_char) -> libc::c_int;	
+	fn spsps_loc(parser: *mut spsps_parser_) -> *mut Loc;
+	fn spsps_peek(parser: *mut spsps_parser_) -> libc::c_char;
+	fn spsps_peek_n(parser: *mut spsps_parser_, n: libc::size_t) -> *mut libc::c_char;
+	fn spsps_peek_str(parser: *mut spsps_parser_, next: *mut libc::c_char) -> libc::c_int;
+	fn spsps_peek_and_consume(parser: *mut spsps_parser_, next: *mut libc::c_char) -> libc::c_int;	
 }
 
 impl Parser{
