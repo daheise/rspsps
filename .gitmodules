@@ -1,3 +1,4 @@
 [submodule "spsps"]
 	path = spsps
-	url = git@github.com:daheise/spsps.git
+	url = https://github.com/daheise/spsps.git
+ 
