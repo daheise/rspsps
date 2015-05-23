@@ -13,8 +13,8 @@ before_install:
 
 install:
   - sudo apt-get install -qq gcc-4.9
-  - sudo apt-get -yqq purge cmake
-  - sudo apt-get -yqq install cmake3
+  - sudo apt-get -yqq purge cmake > /dev/null
+  - sudo apt-get -yqq install cmake3 > /dev/null
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
 
 before_script:
