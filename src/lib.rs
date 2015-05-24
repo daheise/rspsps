@@ -199,7 +199,7 @@ impl Drop for Loc{
     }
 }
 
-#[allow(unused_must_use)]
+#[allow(dead_code)]
 fn test_parser() -> Parser {
     Parser::from_file(Some("test"), &Path::new("./test/foo.txt"))
 }
