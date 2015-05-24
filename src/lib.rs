@@ -32,7 +32,8 @@ enum spsps_parser_ {}
 //this will be the safe abstraction
 #[derive(Debug)]
 struct Parser{
-	ptr: *mut spsps_parser_
+	_ptr: *mut spsps_parser_,
+	_fd: *mut libc::FILE
 }
 
 #[derive(Debug)]
@@ -64,49 +65,58 @@ extern{
 }
 
 impl Parser{
-	fn from_file(name: &str, path: &Path) -> Parser {
+	fn from_file(name: Option<&str>, path: &Path) -> Parser {
 		unsafe{
 			let c_path = CString::new(path.to_str().unwrap()).unwrap().as_ptr();
 			debug!("from_file path: {:?}", CString::new(path.to_str().unwrap()).unwrap());
 			let fd = libc::funcs::c95::stdio::fopen(c_path,  CString::new("r").unwrap().as_ptr());
-			if( fd.is_null() ) {
+			if fd.is_null() {
 				panic!("Unable to open file to parse.");
 			}
-			Parser{ ptr: spsps_new(CString::new(name).unwrap().as_ptr(), fd) }
+			match name{
+			    Some(n) => Parser{ 
+				    	_ptr: spsps_new(CString::new(n).unwrap().as_ptr(), fd),
+				    	_fd: fd
+			    	},
+			    None => Parser{ 
+				    	_ptr: spsps_new(ptr::null(), fd),
+				    	_fd: fd
+			    	}
+			}
 		 }
 	}
 	
 	fn consume(&self) -> String {
 		unsafe {
-			char::from_u32(spsps_consume(self.ptr) as u32).unwrap().to_string()
+			char::from_u32(spsps_consume(self._ptr) as u32).unwrap().to_string()
 		}
 	}
 	
 	fn consume_n(&self, n: usize){
-		unsafe { spsps_consume_n(self.ptr, n as libc::size_t); }
+		unsafe { spsps_consume_n(self._ptr, n as libc::size_t); }
 	}
 	
 	fn consume_whitespace(&self){
-		unsafe { spsps_consume_whitespace(self.ptr); }
+		unsafe { spsps_consume_whitespace(self._ptr); }
 	}
 	
 	fn eof(&self) -> bool{
-		unsafe { spsps_eof(self.ptr) as usize != 0 } 
+		unsafe { spsps_eof(self._ptr) as usize != 0 } 
 	}
 	
 	fn get_loc(&self) -> Loc {
 		unsafe{
-			Loc { ptr: spsps_loc(self.ptr) }
+			Loc { ptr: spsps_loc(self._ptr) }
 		}
 	}
 	
 	fn peek(&self) -> String{
-		let c_char = unsafe { spsps_peek(self.ptr) };
+		let c_char = unsafe { spsps_peek(self._ptr) };
 		char::from_u32(c_char as u32).unwrap().to_string()
 	}
 	
 	fn peek_n(&self, n: usize) -> String{
-		let cstr = unsafe{ spsps_peek_n(self.ptr, n as libc::size_t) };
+		let cstr = unsafe{ spsps_peek_n(self._ptr, n as libc::size_t) };
 		let safe_cstr = unsafe { CStr::from_ptr(cstr) };
 		let retval = str::from_utf8(safe_cstr.to_bytes()).unwrap_or("").to_owned();
 		unsafe { libc::free(safe_cstr.as_ptr() as *mut libc::c_void); }
@@ -114,17 +124,20 @@ impl Parser{
 	}
 	
 	fn peek_str(&self, needle: &str) -> bool {
-		unsafe { spsps_peek_str(self.ptr, CString::new(needle).unwrap().as_ptr()) != 0 }
+		unsafe { spsps_peek_str(self._ptr, CString::new(needle).unwrap().as_ptr()) != 0 }
 	}
 	
 	fn peek_str_and_consume(&self, needle: &str) -> bool {
-		unsafe { spsps_peek_and_consume(self.ptr, CString::new(needle).unwrap().as_ptr()) != 0 }
+		unsafe { spsps_peek_and_consume(self._ptr, CString::new(needle).unwrap().as_ptr()) != 0 }
 	}
 }
 
 impl Drop for Parser{
 	fn drop(&mut self) {
-		unsafe{ spsps_free(self.ptr); }
+		unsafe{
+			libc::fclose(self._fd);
+			spsps_free(self._ptr); 
+		}		
 	}
 }
 
@@ -143,36 +156,37 @@ impl Drop for Loc{
 	}
 }
 
+fn test_parser() -> Parser {
+	let mut f = File::create("./foo.txt").unwrap();
+	f.write_all(b"This is a test.\n");
+	f.sync_data();
+	let test_path = Path::new("./foo.txt");
+	Parser::from_file(Some("test"), test_path)
+}
+
 #[test]
 fn test_from_file(){
 	logger::init().unwrap();
-	let mut f = File::create("foo.txt").unwrap();
-	f.write_all(b"This is a test.\n");
-	f.sync_data();
-	let mut f = File::open("foo.txt").unwrap();
-	let mut file_string = String::new();
-	f.read_to_string(&mut file_string); 
-	debug!("File contents: {}", file_string); 
-	let test_path = Path::new("foo.txt");
-	let p = Parser::from_file("test", test_path);
+	let p = test_parser();
 	//fs::remove_file("foo.txt").unwrap();
 	println!("{:?}", p);
 }
 
+
+
 #[test]
 fn test_peek_n(){
-	let test_path = Path::new("./foo.txt");
-	let p = Parser::from_file("test", test_path);
-	let first_chars = p.peek_n(1000);
+	let p = test_parser();
+	p.consume_whitespace();
+	let first_chars = p.peek_n(3);
 	println!("{:?}", first_chars);
 	assert_eq!(first_chars, "Thi");
 }
 
 #[test]
 fn test_peek(){
-	let test_path = Path::new("foo.txt");
-	let p = Parser::from_file("test", test_path);
-	//p.consume();
+	let p = test_parser();
+	p.consume_whitespace();
 	let first_char = p.peek();
 	println!("{:?}", first_char);
 	assert_eq!(first_char, "T");
@@ -180,8 +194,8 @@ fn test_peek(){
 
 #[test]
 fn test_consume(){
-	let test_path = Path::new("foo.txt");
-	let p = Parser::from_file("test", test_path);
+	let p = test_parser();
+	p.consume_whitespace();
 	let first_char = p.consume();
 	println!("{:?}", first_char);
 	assert_eq!(first_char, "T");
@@ -189,12 +203,20 @@ fn test_consume(){
 
 #[test]
 fn test_loc_to_string(){
-	let test_path = Path::new("foo.txt");
-	let p = Parser::from_file("test", test_path);
+	let p = test_parser();
 	let location = p.get_loc();
 	let loc_string = location.to_string();
 	println!("{}",loc_string);
 	assert_eq!(loc_string, "test:1:1");
+}
+
+#[test]
+fn test_peek_consume(){
+	let parser = test_parser();
+	parser.consume_whitespace();
+	let p = parser.peek();
+	let c = parser.consume();
+	assert_eq!(p, c);
 }
 
 #[test]
