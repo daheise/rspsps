@@ -11,7 +11,6 @@ use std::str;
 use std::char;
 use std::ptr;
 use std::path::Path;
-use std::fs;
 use std::fs::File;
 use std::ffi::CStr;
 use std::ffi::CString;
@@ -19,8 +18,10 @@ use std::ffi::CString;
 
 
 /// For now we're treating spsps_loc_ as an opaque pointer.
+#[allow(non_camel_case_types)]
 enum spsps_loc_ {}
 /// An opaque type for spsps_errno. Currently unused.
+#[allow(non_camel_case_types)]
 enum spsps_errno {}
 
 /*
@@ -33,9 +34,11 @@ struct Loc{
 */
 
 /// This is for the opaque C pointer to spsps_parser_
+#[allow(non_camel_case_types)]
 enum spsps_parser_ {}
 /// This is the safe abstraction over a spsps parser.
 #[derive(Debug)]
+#[allow(raw_pointer_derive)]
 pub struct Parser{
     /// The raw pointer to a C spsps parser.
     _ptr: *mut spsps_parser_,
@@ -44,6 +47,7 @@ pub struct Parser{
 }
 
 #[derive(Debug)]
+#[allow(raw_pointer_derive)]
 /// A safe abstruction over a raw spsps_loc_ pointer.
 pub struct Loc{
     /// The *mut spsps_loc_pointer. 
@@ -195,6 +199,7 @@ impl Drop for Loc{
     }
 }
 
+#[allow(unused_must_use)]
 fn test_parser() -> Parser {
     let mut f = File::create("./foo.txt").unwrap();
     f.write_all(b"This is a test.\n");
@@ -257,5 +262,6 @@ fn test_peek_consume(){
 #[test]
 fn test_zzz_cleanup()
 {
+    use std::fs;
     fs::remove_file("foo.txt").unwrap();
 }
