@@ -195,7 +195,7 @@ impl ToString for Loc{
 
 impl Drop for Loc{
     fn drop(&mut self) {
-        unsafe{ libc::free(self.ptr as *mut libc::c_void); }
+        unsafe{ if !self.ptr.is_null() { libc::free(self.ptr as *mut libc::c_void); } }
     }
 }
 
