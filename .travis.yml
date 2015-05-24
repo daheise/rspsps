@@ -1,39 +1,36 @@
 language: rust
 sudo: required
-
 rust:
-  - stable
-
-# spsps needs gcc 4.8 or greater
-# Proper building with -fPIC needs CMake 3
+- stable
 before_install:
-  # To deal with noisy scripts. If everything succeeds, be silent. If there is a failure, print everything. With terminal colors
-  - function succeed_or_print() { COMMAND=""; while (( "$#" )); do COMMAND="$COMMAND $1"; shift; done;  script -e --command="$COMMAND" typescript 2>&1 > /dev/null || cat typescript; rm typescript; }
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo add-apt-repository -y ppa:andykimpe/cmake3
-  - sudo apt-get update -qq
-
+- function succeed_or_print() { COMMAND=""; while (( "$#" )); do COMMAND="$COMMAND
+  $1"; shift; done;  script -e --command="$COMMAND" typescript 2>&1 > /dev/null ||
+  cat typescript; rm typescript; }
+- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+- sudo add-apt-repository -y ppa:andykimpe/cmake3
+- sudo apt-get update -qq
 install:
-  - succeed_or_print sudo apt-get install -qq gcc-4.9
-  - succeed_or_print sudo apt-get -yqq purge cmake
-  - succeed_or_print sudo apt-get -yqq install cmake3
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
-
+- succeed_or_print sudo apt-get install -qq gcc-4.9
+- succeed_or_print sudo apt-get -yqq purge cmake
+- succeed_or_print sudo apt-get -yqq install cmake3
+- sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 90
 before_script:
-  - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
-  - cd spsps
-  - mkdir build
-  - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Debug ..
-  - succeed_or_print VERBOSE=1 make
-  - cd ../..
+- pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+- cd spsps
+- mkdir build
+- cd build
+- cmake -DCMAKE_BUILD_TYPE=Debug ..
+- succeed_or_print VERBOSE=1 make
+- cd ../..
 script:
-  - |
-      travis-cargo build &&
-      travis-cargo test &&
-      travis-cargo bench &&
-      travis-cargo doc
+- |
+  travis-cargo build &&
+  travis-cargo test &&
+  travis-cargo bench &&
+  travis-cargo --only stable doc
 after_success:
-  - travis-cargo --only stable doc-upload
-  - travis-cargo coveralls
-
+- travis-cargo --only stable doc-upload
+- travis-cargo coveralls
+env:
+  global:
+    secure: aElXUkg+yHRzx9T2VbRXKbfHO41syYuxfUTGW8zY2QwA4lx+OdRV/zDoncdvfAUho1BsHGOwbbFPiyvBQ0d8Evx+PAjJJp/Q3ft2vr59iptrwjcdcZEVLOEBNb4zID1OQ57o45l2f2FSm8BvACtJJfXleea+zZh49qZ50dHdHMbrszDT7nhBBQUCt+KASSw7PUEFD4dOftyDrfsjPPhmxadofBxcB+PgAjc80//wvFzfWtp6XUTkTG92vHqQZxgPkGaNJ6c1ov2Qg8BRO5h4kIPxT/IJWslL1W077pXQkRBwEHRLZVKIzNysKHt4lwxfpzL0gtR0k5tYI5grhCCgvPaRd3h5uPykp52Uya6t0GDP9hT0kwPAeepdLnK5X0FgNZMzasWif9A+dreQzyfFl0qPN0Fq4sXd39omTYHTA2ZJi1+FQylXela3fy6vLnBJ4uJfGMMty7cZPG1At5G2QtaLrHF15kweTBTAHIacaNGldDsYyJl0tS49TvdMKzRhSnK/L22SwrF+VxChlbdhBg8YdulQnJPFxvgCVhNvGfFy/lzN19smpqPC2JRV0Ae1Kj4hf2jLVuGZWXsDCJEMz7EXDZw2S1V2OALz031fJH3PxX3psaGm7IcV/2iRD0qTueguMdb6J+5F/Q0hT+lS0JW8WIlDTHK0m3ufks+Wkcs=
