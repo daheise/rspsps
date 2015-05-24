@@ -65,6 +65,14 @@ extern{
 }
 
 impl Parser{
+	fn new() -> Parser {
+		unsafe{
+			Parser{ 
+		    	_ptr: spsps_new(ptr::null(), ptr::null_mut()),
+		    	_fd: ptr::null_mut()
+			}
+		 }
+	}
 	fn from_file(name: Option<&str>, path: &Path) -> Parser {
 		unsafe{
 			let c_path = CString::new(path.to_str().unwrap()).unwrap().as_ptr();
@@ -135,8 +143,8 @@ impl Parser{
 impl Drop for Parser{
 	fn drop(&mut self) {
 		unsafe{
-			libc::fclose(self._fd);
-			spsps_free(self._ptr); 
+			if !self._ptr.is_null() { spsps_free(self._ptr); }
+			if !self._fd.is_null() { libc::fclose(self._fd); } 
 		}		
 	}
 }
