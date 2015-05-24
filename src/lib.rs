@@ -177,7 +177,6 @@ fn test_from_file(){
 #[test]
 fn test_peek_n(){
 	let p = test_parser();
-	p.consume_whitespace();
 	let first_chars = p.peek_n(3);
 	println!("{:?}", first_chars);
 	assert_eq!(first_chars, "Thi");
@@ -186,7 +185,6 @@ fn test_peek_n(){
 #[test]
 fn test_peek(){
 	let p = test_parser();
-	p.consume_whitespace();
 	let first_char = p.peek();
 	println!("{:?}", first_char);
 	assert_eq!(first_char, "T");
@@ -195,7 +193,6 @@ fn test_peek(){
 #[test]
 fn test_consume(){
 	let p = test_parser();
-	p.consume_whitespace();
 	let first_char = p.consume();
 	println!("{:?}", first_char);
 	assert_eq!(first_char, "T");
@@ -213,7 +210,6 @@ fn test_loc_to_string(){
 #[test]
 fn test_peek_consume(){
 	let parser = test_parser();
-	parser.consume_whitespace();
 	let p = parser.peek();
 	let c = parser.consume();
 	assert_eq!(p, c);
