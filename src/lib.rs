@@ -218,5 +218,5 @@ fn test_peek_consume(){
 #[test]
 fn test_zzz_cleanup()
 {
-	//fs::remove_file("foo.txt").unwrap();
+	fs::remove_file("foo.txt").unwrap();
 }
