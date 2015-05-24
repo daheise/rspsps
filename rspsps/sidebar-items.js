@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Loc","A safe abstruction over a raw spsps_loc_ pointer."],["Parser","This is the safe abstraction over a spsps parser."]]});
