@@ -201,11 +201,7 @@ impl Drop for Loc{
 
 #[allow(unused_must_use)]
 fn test_parser() -> Parser {
-    let mut f = File::create("./foo.txt").unwrap();
-    f.write_all(b"This is a test.\n");
-    f.sync_data();
-    let test_path = Path::new("./foo.txt");
-    Parser::from_file(Some("test"), test_path)
+    Parser::from_file(Some("test"), &Path::new("./test/foo.txt"))
 }
 
 #[test]
@@ -257,11 +253,4 @@ fn test_peek_consume(){
     let p = parser.peek();
     let c = parser.consume();
     assert_eq!(p, c);
-}
-
-#[test]
-fn test_zzz_cleanup()
-{
-    use std::fs;
-    fs::remove_file("foo.txt").unwrap();
 }
