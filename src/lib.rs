@@ -132,7 +132,7 @@ impl Parser{
     }
     
     ///Determine if the end of file has been consumed.
-    pub fn eof(&self) -> bool{
+    pub fn at_eof(&self) -> bool{
         unsafe { spsps_eof(self._ptr) as usize != 0 } 
     }
     
@@ -212,8 +212,6 @@ fn test_from_file(){
     println!("{:?}", p);
 }
 
-
-
 #[test]
 fn test_peek_n(){
     let p = test_parser();
@@ -226,8 +224,27 @@ fn test_peek_n(){
 fn test_peek(){
     let p = test_parser();
     let first_char = p.peek();
-    println!("{:?}", first_char);
+    println!("{}", first_char);
     assert_eq!(first_char, "T");
+}
+
+#[test]
+fn test_consume_n(){
+    let p = test_parser();
+    p.consume_n(3);
+    let next_char = p.peek();
+    println!("{}", next_char);
+    assert_eq!(next_char, "s");
+}
+
+#[test]
+fn test_consume_whitespace(){
+    let p = test_parser();
+    p.consume_n(4);
+    p.consume_whitespace();
+    let next_char = p.peek();
+    println!("{}", next_char);
+    assert_eq!(next_char, "i");
 }
 
 #[test]
@@ -253,4 +270,25 @@ fn test_peek_consume(){
     let p = parser.peek();
     let c = parser.consume();
     assert_eq!(p, c);
+}
+
+#[test]
+fn test_peek_str(){
+    let parser = test_parser();
+    assert!(parser.peek_str("This"));
+}
+
+#[test]
+fn test_peek_str_and_consume(){
+    let parser = test_parser();
+    parser.peek_str_and_consume("This");
+    assert_eq!(parser.peek(), " ");
+}
+
+#[test]
+fn test_at_eof(){
+    let parser = test_parser();
+    assert!(!parser.at_eof());
+    parser.consume_n(1000);
+    assert!(parser.at_eof());
 }
