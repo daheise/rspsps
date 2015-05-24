@@ -1,8 +1,14 @@
 extern crate libc;
+#[macro_use]
+extern crate log;
+extern crate env_logger as logger;
+use log::LogLevel;
+use std::io::prelude::*;
 use std::str;
 use std::char;
 use std::ptr;
 use std::path::Path;
+use std::fs;
 use std::fs::File;
 use std::ffi::CStr;
 use std::ffi::CString;
@@ -60,8 +66,12 @@ extern{
 impl Parser{
 	fn from_file(name: &str, path: &Path) -> Parser {
 		unsafe{
-			let path = CString::new(path.to_str().unwrap()).unwrap().as_ptr();
-			let fd = libc::funcs::c95::stdio::fopen(path,  CString::new("r").unwrap().as_ptr());
+			let c_path = CString::new(path.to_str().unwrap()).unwrap().as_ptr();
+			debug!("from_file path: {:?}", CString::new(path.to_str().unwrap()).unwrap());
+			let fd = libc::funcs::c95::stdio::fopen(c_path,  CString::new("r").unwrap().as_ptr());
+			if( fd.is_null() ) {
+				panic!("Unable to open file to parse.");
+			}
 			Parser{ ptr: spsps_new(CString::new(name).unwrap().as_ptr(), fd) }
 		 }
 	}
@@ -91,9 +101,8 @@ impl Parser{
 	}
 	
 	fn peek(&self) -> String{
-		unsafe {
-			char::from_u32(spsps_peek(self.ptr) as u32).unwrap().to_string()
-		}
+		let c_char = unsafe { spsps_peek(self.ptr) };
+		char::from_u32(c_char as u32).unwrap().to_string()
 	}
 	
 	fn peek_n(&self, n: usize) -> String{
@@ -136,7 +145,60 @@ impl Drop for Loc{
 
 #[test]
 fn test_from_file(){
-	let test_path = Path::new(file!());
+	logger::init().unwrap();
+	let mut f = File::create("foo.txt").unwrap();
+	f.write_all(b"This is a test.\n");
+	f.sync_data();
+	let mut f = File::open("foo.txt").unwrap();
+	let mut file_string = String::new();
+	f.read_to_string(&mut file_string); 
+	debug!("File contents: {}", file_string); 
+	let test_path = Path::new("foo.txt");
 	let p = Parser::from_file("test", test_path);
+	//fs::remove_file("foo.txt").unwrap();
 	println!("{:?}", p);
+}
+
+#[test]
+fn test_peek_n(){
+	let test_path = Path::new("./foo.txt");
+	let p = Parser::from_file("test", test_path);
+	let first_chars = p.peek_n(1000);
+	println!("{:?}", first_chars);
+	assert_eq!(first_chars, "Thi");
+}
+
+#[test]
+fn test_peek(){
+	let test_path = Path::new("foo.txt");
+	let p = Parser::from_file("test", test_path);
+	//p.consume();
+	let first_char = p.peek();
+	println!("{:?}", first_char);
+	assert_eq!(first_char, "T");
+}
+
+#[test]
+fn test_consume(){
+	let test_path = Path::new("foo.txt");
+	let p = Parser::from_file("test", test_path);
+	let first_char = p.consume();
+	println!("{:?}", first_char);
+	assert_eq!(first_char, "T");
+}
+
+#[test]
+fn test_loc_to_string(){
+	let test_path = Path::new("foo.txt");
+	let p = Parser::from_file("test", test_path);
+	let location = p.get_loc();
+	let loc_string = location.to_string();
+	println!("{}",loc_string);
+	assert_eq!(loc_string, "test:1:1");
+}
+
+#[test]
+fn test_zzz_cleanup()
+{
+	//fs::remove_file("foo.txt").unwrap();
 }
